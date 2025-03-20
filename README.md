@@ -105,3 +105,4 @@ This application can be deployed to platforms like Vercel, Netlify, or any hosti
 ## License
 
 This project is licensed under the MIT License.
+# modern-next-app
