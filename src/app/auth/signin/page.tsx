@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -19,18 +20,7 @@ export default function SignInPage() {
     setError('');
 
     try {
-      // For demo, we'll accept any credentials and redirect
-      // In a real app, you would validate with next-auth properly
-      
-      // For demo, using direct login without NextAuth for now
-      if (email === 'admin@bank.mn' && password === 'password') {
-        // Simply redirect to dashboard instead of using NextAuth signIn
-        router.push('/dashboard');
-      } else {
-        setError('Имэйл эсвэл нууц үг буруу байна.');
-      }
-      
-      /* Commented out NextAuth code that's causing issues
+      // Use NextAuth's signIn function for proper authentication
       const result = await signIn('credentials', {
         redirect: false,
         email,
@@ -39,10 +29,10 @@ export default function SignInPage() {
 
       if (!result?.error) {
         router.push('/dashboard');
+        router.refresh();
       } else {
         setError('Имэйл эсвэл нууц үг буруу байна.');
       }
-      */
     } catch (err) {
       console.error('Sign in error:', err);
       setError('Нэвтрэх үед алдаа гарлаа. Дахин оролдоно уу.');

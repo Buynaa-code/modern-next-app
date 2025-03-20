@@ -1,24 +1,10 @@
 import NextAuth from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import GitHubProvider from 'next-auth/providers/github';
-import GoogleProvider from 'next-auth/providers/google';
-import { PrismaClient } from '@prisma/client';
 import { AuthOptions } from 'next-auth';
 
-const prisma = new PrismaClient();
-
+// Simplified version without Prisma adapter for demo purposes
 export const authOptions: AuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
-    GitHubProvider({
-      clientId: process.env.GITHUB_ID || '',
-      clientSecret: process.env.GITHUB_SECRET || '',
-    }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_ID || '',
-      clientSecret: process.env.GOOGLE_SECRET || '',
-    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -28,12 +14,12 @@ export const authOptions: AuthOptions = {
       async authorize(credentials) {
         // In a real app, you would verify credentials against a database
         // This is a placeholder for demo purposes
-        if (credentials?.email === 'user@example.com' && credentials?.password === 'password') {
+        if (credentials?.email === 'admin@bank.mn' && credentials?.password === 'password') {
           return {
             id: '1',
-            name: 'Demo User',
-            email: 'user@example.com',
-            image: 'https://ui-avatars.com/api/?name=Demo+User',
+            name: 'Админ Хэрэглэгч',
+            email: 'admin@bank.mn',
+            image: 'https://ui-avatars.com/api/?name=Admin+User',
           };
         }
         return null;
@@ -42,21 +28,30 @@ export const authOptions: AuthOptions = {
   ],
   pages: {
     signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
+    error: '/auth/signin', // Redirect back to signin on error
   },
   callbacks: {
-    async session({ session, user, token }) {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.name = user.name;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
       if (session?.user) {
-        session.user.id = user?.id || token?.sub || '';
+        session.user.id = token.id as string;
       }
       return session;
     },
   },
   session: {
-    strategy: 'jwt' as const,
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
+  secret: process.env.NEXTAUTH_SECRET || 'TEMPORARY_SECRET_FOR_DEVELOPMENT',
 };
 
 const handler = NextAuth(authOptions);
